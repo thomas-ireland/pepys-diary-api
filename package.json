@@ -1,7 +1,7 @@
 {
-  "name": "ts-template-base",
+  "name": "pepys-diary-api",
   "version": "0.0.0",
-  "description": "A TypeScript base template with a locked-down workflow.",
+  "description": "The Diary of Samuel Pepys API.",
   "license": "MIT",
   "author": "Thomas Ireland",
   "type": "module",

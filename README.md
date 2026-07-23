@@ -1,7 +1,9 @@
-# ts-template-base
+# pepys-diary-api
 
-A TypeScript base template with a locked-down git workflow. No framework, test
-runner, or database — just the scaffolding and guardrails, ready to build on.
+The Diary of Samuel Pepys API. Built on
+[ts-template-base](https://github.com/thomas-ireland/ts-template-base), a TypeScript base
+template with a locked-down git workflow — no framework, test runner, or database yet,
+just the scaffolding and guardrails, ready to build on.
 
 ## What's included
 

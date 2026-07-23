@@ -1,5 +1,5 @@
 function main(): void {
-  console.log("ts-template-base is ready");
+  console.log("pepys-diary-api is ready");
 }
 
 main();

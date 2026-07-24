@@ -53,9 +53,9 @@ npm run format:check
 npm run build
 ```
 
-`npm ci` is first and installs strictly from `package-lock.json` (needs Node 24+;
-`engine-strict` in `.npmrc` refuses the wrong version). CI runs the same four plus
-`npm audit signatures` and `npm audit --audit-level=high`.
+`npm ci` is first and installs strictly from `package-lock.json` (needs the exact Node
+version pinned in `.node-version`; `engine-strict` in `.npmrc` refuses any other version).
+CI runs the same four plus `npm audit signatures` and `npm audit --audit-level=high`.
 
 To add, update, or remove a dependency: `npm install [--save-dev] <package>@<exact-version>`
 (`save-exact` in `.npmrc` pins it precisely), in the same commit that needs it, then run

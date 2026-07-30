@@ -1,3 +1,5 @@
+import { INDENT_RE } from "./segment.js";
+
 const MONTH_PREFIXES = [
   "January",
   "February",
@@ -75,4 +77,40 @@ export function matchDayLine(line: string): DayLineMatch | null {
     label,
     textStart: m[0].length,
   };
+}
+
+export interface DayBoundary {
+  line: number;
+  days: number[];
+  label: string | null;
+  /** Index into the boundary line where the entry's own text begins. */
+  matchEnd: number;
+}
+
+/**
+ * Scans every line in a month's block for a day boundary. Footnote-block
+ * lines (5+ spaces indented) are skipped -- they can't syntactically match
+ * DAY_LINE_RE anyway (it requires the line to start at column 0 with a month
+ * name or day token), but skipping them explicitly keeps the intent clear
+ * rather than relying on that as an accident of the regex.
+ */
+export function findDayBoundaries(
+  lines: string[],
+  blockStart: number,
+  blockEnd: number,
+): DayBoundary[] {
+  const boundaries: DayBoundary[] = [];
+  for (let i = blockStart; i < blockEnd; i++) {
+    const line = lines[i] as string;
+    if (INDENT_RE.test(line)) continue;
+    const m = matchDayLine(line);
+    if (!m) continue;
+    boundaries.push({
+      line: i,
+      days: m.dayTokens.map(dayTokenToInt),
+      label: m.label,
+      matchEnd: m.textStart,
+    });
+  }
+  return boundaries;
 }

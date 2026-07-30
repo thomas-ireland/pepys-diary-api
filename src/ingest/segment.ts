@@ -1,5 +1,5 @@
 /** A run of 5+ leading spaces marks an editorial footnote block. */
-const INDENT_RE = /^ {5,}\S/;
+export const INDENT_RE = /^ {5,}\S/;
 
 /** The attribution initials a footnote block sometimes ends with, e.g. "--B.]". */
 const ATTRIB_RE = /--\s*(B|M\.\s?B|R|Palsgrave)\.\]\s*$/;

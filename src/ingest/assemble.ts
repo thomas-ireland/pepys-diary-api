@@ -74,6 +74,7 @@ export function assembleRecords(lines: string[]): DiaryRecord[] {
       const chunkForVerify = lines.slice(segStart, segEnd);
       let verifyLines = chunkForVerify;
       let verifyOffset = firstLineOffset;
+      let sourceStart = segStart;
 
       if (bidx === 0 && preProcessed) {
         entryText = preProcessed.entryText
@@ -88,6 +89,7 @@ export function assembleRecords(lines: string[]): DiaryRecord[] {
           chunkForVerify.slice(1),
         ].flat();
         verifyOffset = 0;
+        sourceStart = blockStart;
       }
 
       const { ok } = verifyReconstruction(
@@ -131,7 +133,7 @@ export function assembleRecords(lines: string[]): DiaryRecord[] {
         commentary,
         confidence: ok ? "high" : "low",
         rawSnippet: ok ? null : chunkForVerify.join("\n"),
-        sourceLines: [segStart + 1, segEnd],
+        sourceLines: [sourceStart + 1, segEnd],
       });
     }
   }

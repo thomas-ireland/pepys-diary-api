@@ -40,6 +40,14 @@ describe("assembleRecords (against the real, full source)", () => {
     expect(jan1660?.commentary.length).toBeGreaterThanOrEqual(10);
   });
 
+  it("includes the preamble in sourceLines too, not just the dated portion", () => {
+    // The month block starts at line 1702 (right after the JANUARY header);
+    // sourceLines must cover the whole thing prose was pulled from, or
+    // provenance for those 135 preamble lines silently understates itself.
+    const jan1660 = records.find((r) => r.id === "1660-01-01");
+    expect(jan1660?.sourceLines[0]).toBe(1702);
+  });
+
   it("naturally parses a well-formed multi-day entry with no fix needed", () => {
     // "16th, 17th, 18th, 19th." -- every token is well-formed, so this spans
     // 4 days as one record straight out of assembleRecords.

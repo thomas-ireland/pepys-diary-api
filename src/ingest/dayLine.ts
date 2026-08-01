@@ -31,9 +31,11 @@ const MONTH_PREFIXES = [
  * Two ways a day is written: the old-style abbreviated ordinal ("2d.", "22d."),
  * restricted to just 2/3/22/23 -- any other "Nd."/"Ns." in the text is old-money
  * notation (pence/shillings, e.g. "6d.") rather than a date -- or the ordinary
- * ordinal suffix ("1st", "27th").
+ * ordinal suffix ("1st", "27th"). The suffix's capitalization is inconsistent
+ * in the source -- exactly one entry reads "21St." -- so both cases are
+ * accepted.
  */
-const DAY_TOKEN = "(?:(?:2|3|22|23)d|\\d{1,2}\\s?(?:st|nd|rd|th))";
+const DAY_TOKEN = "(?:(?:2|3|22|23)d|\\d{1,2}\\s?(?:st|nd|rd|th|St|Nd|Rd|Th))";
 
 /**
  * A day line optionally restates its month (only the very first entry of the

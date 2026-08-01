@@ -56,6 +56,13 @@ describe("matchDayLine (against real lines from the source)", () => {
     );
     expect(m?.dayTokens).toEqual(["16th", "17th", "18th", "19th"]);
   });
+
+  it("matches a capitalized ordinal suffix (the source is inconsistent -- one entry reads '21St.')", () => {
+    const m = matchDayLine(
+      "21St. Within all day long, helping to put up my hangings in my house",
+    );
+    expect(m?.dayTokens).toEqual(["21St"]);
+  });
 });
 
 describe("dayTokenToInt", () => {

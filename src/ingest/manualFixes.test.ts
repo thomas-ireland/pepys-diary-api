@@ -14,7 +14,7 @@ describe("applyManualFixes (against the real, full source)", () => {
   const records = freshRecords();
 
   it("removes exactly one record (the spurious pence-collision fragment)", () => {
-    expect(records).toHaveLength(3411);
+    expect(records).toHaveLength(3412);
   });
 
   it("flags exactly the 5 known trap entries as low confidence", () => {

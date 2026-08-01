@@ -7,8 +7,8 @@ const lines = loadLines(SOURCE_PATH);
 const records = assembleRecords(lines);
 
 describe("assembleRecords (against the real, full source)", () => {
-  it("produces 3412 records before any manual fixes", () => {
-    expect(records).toHaveLength(3412);
+  it("produces 3413 records before any manual fixes", () => {
+    expect(records).toHaveLength(3413);
   });
 
   it("never fails the automatic word-conservation check on its own", () => {

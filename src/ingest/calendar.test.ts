@@ -6,6 +6,7 @@ import {
   isoDate,
   isValidYmd,
   nextDay,
+  parseIsoDate,
   ymdLessOrEqual,
 } from "./calendar.js";
 
@@ -71,6 +72,13 @@ describe("isoDate", () => {
 
   it("leaves double-digit month/day unpadded beyond width 2", () => {
     expect(isoDate(1669, 12, 31)).toBe("1669-12-31");
+  });
+});
+
+describe("parseIsoDate", () => {
+  it("is the inverse of isoDate", () => {
+    expect(parseIsoDate("1660-01-01")).toEqual([1660, 1, 1]);
+    expect(parseIsoDate(isoDate(1667, 3, 9))).toEqual([1667, 3, 9]);
   });
 });
 

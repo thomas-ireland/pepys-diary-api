@@ -38,6 +38,11 @@ export function isoDate(year: number, month: number, day: number): string {
   return `${String(year).padStart(4, "0")}-${String(month).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
 }
 
+export function parseIsoDate(date: string): Ymd {
+  const [year, month, day] = date.split("-").map(Number);
+  return [year as number, month as number, day as number];
+}
+
 export function nextDay([year, month, day]: Ymd): Ymd {
   if (day < daysInMonth(year, month)) return [year, month, day + 1];
   if (month < 12) return [year, month + 1, 1];

@@ -18,12 +18,12 @@ describe("applyManualFixes (against the real, full source)", () => {
   });
 
   it("flags exactly the 5 known trap entries as low confidence", () => {
-    const lowIds = records
+    const lowDates = records
       .filter((r) => r.confidence === "low")
-      .map((r) => r.id)
+      .map((r) => r.date)
       .sort();
-    expect(lowIds).toEqual([
-      "1661-07-08_to_1661-07-13",
+    expect(lowDates).toEqual([
+      "1661-07-08",
       "1661-11-14",
       "1662-05-20",
       "1664-12-06",
@@ -32,7 +32,7 @@ describe("applyManualFixes (against the real, full source)", () => {
   });
 
   it("extends the Loth OCR-artifact entry to its full 8-13 July range", () => {
-    const r = records.find((rec) => rec.id === "1661-07-08_to_1661-07-13");
+    const r = records.find((rec) => rec.date === "1661-07-08");
     expect(r?.dateEnd).toBe("1661-07-13");
     expect(r?.entryText.startsWith("Loth")).toBe(false);
     expect(r?.entryText).toMatch(/^I fell to work/);
@@ -40,21 +40,21 @@ describe("applyManualFixes (against the real, full source)", () => {
 
   it("renumbers the three mistyped ordinals, identified by their exact source lines", () => {
     // Each source date has an unrelated, correctly-dated entry elsewhere in
-    // the diary too, so the old id alone can still legitimately exist --
+    // the diary too, so the old date alone can still legitimately exist --
     // what proves the right record was fixed is its source line range.
-    expect(records.find((r) => r.id === "1661-11-14")?.sourceLines).toEqual([
+    expect(records.find((r) => r.date === "1661-11-14")?.sourceLines).toEqual([
       17181, 17193,
     ]);
-    expect(records.find((r) => r.id === "1662-05-20")?.sourceLines).toEqual([
+    expect(records.find((r) => r.date === "1662-05-20")?.sourceLines).toEqual([
       20374, 20396,
     ]);
-    expect(records.find((r) => r.id === "1664-12-06")?.sourceLines).toEqual([
+    expect(records.find((r) => r.date === "1664-12-06")?.sourceLines).toEqual([
       47924, 47953,
     ]);
   });
 
   it("merges the pence-collision fragment back into 1667-01-28", () => {
-    const r = records.find((rec) => rec.id === "1667-01-28");
+    const r = records.find((rec) => rec.date === "1667-01-28");
     expect(r?.entryText).toContain("3s. 2d. change for each.");
   });
 });

@@ -59,3 +59,19 @@ describe("checkSourceLineCoverage (against the real, full, corrected pipeline ou
     expect(report.doubleCovered).toEqual([]);
   });
 });
+
+describe("date ranges", () => {
+  it("never runs backwards", () => {
+    // A renumbered entry that updated `date` but not `dateEnd` would claim
+    // to span from its corrected date back to its old wrong one.
+    expect(records.filter((r) => r.dateEnd < r.date)).toEqual([]);
+  });
+
+  it("collapses to a single day except for the two Pepys wrote as one passage", () => {
+    expect(
+      records
+        .filter((r) => r.dateEnd !== r.date)
+        .map((r) => `${r.date}..${r.dateEnd}`),
+    ).toEqual(["1661-07-08..1661-07-13", "1661-07-16..1661-07-19"]);
+  });
+});

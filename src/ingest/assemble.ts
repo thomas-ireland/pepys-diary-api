@@ -5,9 +5,14 @@ import { findDiaryBodyRegion, findMonthHeaders } from "./structure.js";
 import { verifyReconstruction } from "./verify.js";
 
 export interface DiaryRecord {
-  id: string;
-  date: string | null;
-  dateEnd: string | null;
+  /** ISO date this entry starts on. Unique across entries, so it's the key. */
+  date: string;
+  /**
+   * ISO date this entry ends on. Equal to `date` for the ordinary
+   * single-day entry; later only for the handful Pepys wrote as one
+   * passage spanning several days ("These four days we spent in...").
+   */
+  dateEnd: string;
   dayLabel: string | null;
   entryText: string;
   commentary: CommentaryNote[];
@@ -103,29 +108,24 @@ export function assembleRecords(lines: string[]): DiaryRecord[] {
       const days = boundary.days;
       const firstDay = days[0] as number;
       const lastDay = days[days.length - 1] as number;
-      const d0Valid = isValidYmd(year, month, firstDay);
 
-      let id: string;
-      let date: string | null;
-      let dateEnd: string | null;
-      if (days.length > 1) {
-        const d1Valid = isValidYmd(year, month, lastDay);
-        id =
-          d0Valid && d1Valid
-            ? `${isoDate(year, month, firstDay)}_to_${isoDate(year, month, lastDay)}`
-            : `${year}-${String(month).padStart(2, "0")}-x-${segStart + 1}`;
-        date = d0Valid ? isoDate(year, month, firstDay) : null;
-        dateEnd = d1Valid ? isoDate(year, month, lastDay) : null;
-      } else {
-        id = d0Valid
-          ? isoDate(year, month, firstDay)
-          : `${year}-${String(month).padStart(2, "0")}-x-${segStart + 1}`;
-        date = d0Valid ? isoDate(year, month, firstDay) : null;
-        dateEnd = null;
+      // A day number the calendar rejects means the source says something we
+      // don't understand -- fail loudly rather than emit a record with a
+      // hole where its date should be.
+      if (
+        !isValidYmd(year, month, firstDay) ||
+        !isValidYmd(year, month, lastDay)
+      ) {
+        throw new Error(
+          `Invalid date at source line ${segStart + 1}: ${year}-${month}-${firstDay}` +
+            (days.length > 1 ? ` to ${year}-${month}-${lastDay}` : ""),
+        );
       }
 
+      const date = isoDate(year, month, firstDay);
+      const dateEnd = isoDate(year, month, lastDay);
+
       records.push({
-        id,
         date,
         dateEnd,
         dayLabel: boundary.label,

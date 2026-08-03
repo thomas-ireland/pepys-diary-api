@@ -24,7 +24,6 @@ export function applyManualFixes(records: DiaryRecord[]): DiaryRecord[] {
   // captured [8, 9] and left the rest of the list as stray leading text.
   {
     const r = findByPrefix(records, "Loth, 11th, 12th, 13th. ");
-    r.id = "1661-07-08_to_1661-07-13";
     r.dateEnd = "1661-07-13";
     r.entryText = r.entryText.slice("Loth, 11th, 12th, 13th. ".length);
     r.confidence = "low";
@@ -33,34 +32,36 @@ export function applyManualFixes(records: DiaryRecord[]): DiaryRecord[] {
   // The source literally has the wrong ordinal in each case, but sequence
   // position (the entries immediately before and after) makes the correct
   // date unambiguous.
-  const renumbers: { prefix: string; oldId: string; newId: string }[] = [
+  const renumbers: { prefix: string; oldDate: string; newDate: string }[] = [
     {
       prefix:
         "At the office all the morning. At noon I went by appointment to the Sun in Fish",
-      oldId: "1661-11-04",
-      newId: "1661-11-14",
+      oldDate: "1661-11-04",
+      newDate: "1661-11-14",
     },
     {
       prefix:
         "Sir W. Pen and I did a little business at the office, and so home",
-      oldId: "1662-05-10",
-      newId: "1662-05-20",
+      oldDate: "1662-05-10",
+      newDate: "1662-05-20",
     },
     {
       prefix: "Up, and in Sir W. Batten",
-      oldId: "1664-12-05",
-      newId: "1664-12-06",
+      oldDate: "1664-12-05",
+      newDate: "1664-12-06",
     },
   ];
   for (const fix of renumbers) {
     const r = findByPrefix(records, fix.prefix);
-    if (r.id !== fix.oldId) {
+    if (r.date !== fix.oldDate) {
       throw new Error(
-        `Manual fix mismatch: expected id ${fix.oldId}, found ${r.id}`,
+        `Manual fix mismatch: expected date ${fix.oldDate}, found ${r.date}`,
       );
     }
-    r.id = fix.newId;
-    r.date = fix.newId;
+    r.date = fix.newDate;
+    // Single-day entries, so the range moves with the corrected date --
+    // leaving dateEnd behind would make the entry claim to span backwards.
+    r.dateEnd = fix.newDate;
     r.confidence = "low";
   }
 
@@ -71,7 +72,7 @@ export function applyManualFixes(records: DiaryRecord[]): DiaryRecord[] {
   // entry it actually belongs to.
   {
     const spurious = findByPrefix(records, "change for each.");
-    const target = records.find((r) => r.id === "1667-01-28");
+    const target = records.find((r) => r.date === "1667-01-28");
     if (!target) throw new Error("Manual fix target 1667-01-28 not found");
     if (!target.entryText.trimEnd().endsWith("3s.")) {
       throw new Error(

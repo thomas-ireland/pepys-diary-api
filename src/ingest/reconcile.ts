@@ -26,10 +26,9 @@ export function reconcile(records: DiaryRecord[]): ReconciliationReport {
   );
   const coverage = new Map<string, number>();
   for (const r of records) {
-    if (!r.date) continue;
     for (const d of enumerateDates(
       parseIsoDate(r.date),
-      parseIsoDate(r.dateEnd ?? r.date),
+      parseIsoDate(r.dateEnd),
     )) {
       coverage.set(d, (coverage.get(d) ?? 0) + 1);
     }

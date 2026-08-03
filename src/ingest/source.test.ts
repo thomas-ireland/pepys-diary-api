@@ -1,15 +1,7 @@
 import { createHash } from "node:crypto";
 import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
-import { SOURCE_PATH } from "./paths.js";
-
-/**
- * SHA-256 of the exact source we parse against. Every downstream count and
- * invariant is derived from this precise text, so if the file ever changes the
- * whole pipeline's ground truth is invalidated — this test fails loudly first.
- */
-export const SOURCE_SHA256 =
-  "1d8c7943d9159e4e40d98e5fc454c4d771951956863048bfdda9e92fb71f58a1";
+import { SOURCE_PATH, SOURCE_SHA256 } from "./paths.js";
 
 describe("diary source text", () => {
   it("matches the expected Project Gutenberg #4200 checksum", () => {

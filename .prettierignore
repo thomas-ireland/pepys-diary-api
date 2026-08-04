@@ -1,3 +1,4 @@
 # Generated or not ours to format
 package-lock.json
 dist
+data/diary.json

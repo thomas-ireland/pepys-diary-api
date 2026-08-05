@@ -44,18 +44,22 @@ rewrite pushed history.
 
 Fresh clone: `npm ci` installs everything and wires up the git hooks (`prepare`).
 
-Run before every commit; `npm run gate` runs all four:
+Run before every commit; `npm run gate` runs all of:
 
 ```bash
 npm ci
 npm run lint
 npm run format:check
+npm run db:validate
+npm run test
 npm run build
 ```
 
 `npm ci` is first and installs strictly from `package-lock.json` (needs the exact Node
 version pinned in `.node-version`; `engine-strict` in `.npmrc` refuses any other version).
-CI runs the same four plus `npm audit signatures` and `npm audit --audit-level=high`.
+`db:validate` needs `DATABASE_URL` to be set — see [Database](#database). CI runs the same,
+plus `npm audit signatures`, `npm audit --audit-level=high`, and `npm run db:deploy` against
+a throwaway Postgres service to prove the migrations apply from scratch.
 
 To add, update, or remove a dependency: `npm install [--save-dev] <package>@<exact-version>`
 (`save-exact` in `.npmrc` pins it precisely), in the same commit that needs it, then run
@@ -68,6 +72,27 @@ don't route around it:
   lockfile are staged, runs `npm ci --dry-run` to catch a desynced lockfile.
 - **commit-msg hook** — validates the commit message.
 - **`pr-title.yml` (CI)** — validates the pull request title the same way.
+
+## Database
+
+Postgres runs in Docker locally. Once per clone:
+
+```bash
+cp .env.example .env
+```
+
+Then:
+
+```bash
+npm run db:up        # start Postgres
+npm run db:migrate   # apply migrations (and generate one, if the schema changed)
+npm run db:down      # stop it
+```
+
+The schema lives in `prisma/schema.prisma`; a change to it means running `npm run db:migrate`
+and committing the generated migration alongside. The database is a derived artifact —
+rebuilt from its migrations, never hand-edited. A fix belongs upstream in the schema or the
+ingestion pipeline, then re-applied, so every environment converges on the same state.
 
 ## Security
 

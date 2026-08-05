@@ -1,0 +1,23 @@
+services:
+  postgres:
+    image: postgres:18.4-alpine
+    container_name: pepys-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: pepys
+      POSTGRES_PASSWORD: pepys
+      POSTGRES_DB: pepys
+    ports:
+      - "5432:5432"
+    volumes:
+      # Postgres 18+ wants a single mount here, not at .../data -- it places
+      # the cluster in a version-specific subdirectory of its own.
+      - pepys-pgdata:/var/lib/postgresql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U pepys -d pepys"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+volumes:
+  pepys-pgdata:

@@ -1,0 +1,66 @@
+// The diary as queryable data. Deliberately not a mirror of the parser's
+// output (data/diary.json): parser-process metadata -- confidence, raw
+// snippets, source line numbers -- stays in that artifact. This models the
+// diary itself.
+//
+// One row per calendar day, including the days Pepys wrote nothing, so a
+// gap is an answerable fact rather than an absent row. A day points at the
+// entry covering it; the two passages he wrote spanning several days are
+// one entry with several days pointing at it, which is why no date range
+// is stored anywhere.
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+/// Every calendar day from 1660-01-01 to 1669-05-31.
+model Day {
+  date DateTime @id @db.Date
+
+  /// "Lord's day", "Office day", "Valentine's day" -- as written in the source.
+  label String?
+
+  /// Null when Pepys wrote nothing that day.
+  entry   Entry? @relation(fields: [entryId], references: [id])
+  entryId Int?
+
+  @@index([entryId])
+  @@map("days")
+}
+
+/// A passage Pepys wrote. Usually covers one day; twice, several.
+model Entry {
+  id   Int    @id @default(autoincrement())
+  text String
+
+  days       Day[]
+  commentary Commentary[]
+
+  @@map("entries")
+}
+
+/// A Victorian editor's footnote, lifted out of the diary text.
+model Commentary {
+  id Int @id @default(autoincrement())
+
+  /// The words in the entry this note was attached to.
+  anchor String
+  note   String
+
+  /// Editor's initials -- "B" (Braybrooke), "M.B" (Mynors Bright) -- where given.
+  source String?
+
+  /// Order within the entry, since the source's sequence is meaningful.
+  position Int
+
+  entry   Entry @relation(fields: [entryId], references: [id])
+  entryId Int
+
+  @@unique([entryId, position])
+  @@index([entryId])
+  @@map("commentary")
+}

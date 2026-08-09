@@ -121,6 +121,21 @@ the entry point that listens and handles shutdown. `/docs` serves the API docume
 `/health` checks the database rather than reporting a hollow "ok" — the service is only
 useful when it can reach Postgres, so its health should say so.
 
+### The container
+
+```bash
+docker build -t pepys-api .
+docker run --rm --network pepys-diary-api_default -p 3000:3000 \
+  -e DATABASE_URL="postgresql://pepys:pepys@postgres:5432/pepys?schema=public" pepys-api
+```
+
+Two things the `Dockerfile` has to do that aren't obvious, both explained in comments
+there: generate the Prisma client explicitly (`npm ci` doesn't, and the runtime stage has
+no CLI to do it later), and strip the packages Prisma declares as runtime dependencies but
+never uses to serve a request — its own CLI, TypeScript, and Prisma Studio's React GUI,
+around 270 MB between them. CI builds the image and queries through it, so a future Prisma
+release that genuinely needs one of those fails there rather than in production.
+
 ## Security
 
 - Pin GitHub Actions to a full commit SHA, never a mutable tag; note the version in a

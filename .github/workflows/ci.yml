@@ -64,5 +64,26 @@ jobs:
         run: npm run test:db
       - name: Build
         run: npm run build
+      # The runtime image strips packages Prisma declares as runtime
+      # dependencies but doesn't use to serve requests. This proves the
+      # stripped image still starts and queries, so a future Prisma release
+      # that genuinely needs one of them fails here rather than in production.
+      - name: Build the container image
+        run: docker build -t pepys-api:ci .
+      - name: Smoke test the container image
+        run: |
+          docker run -d --name pepys-api-ci --network host \
+            -e DATABASE_URL="$DATABASE_URL" pepys-api:ci
+          for i in $(seq 1 30); do
+            if curl -fsS http://localhost:3000/health | grep -q '"status":"ok"'; then
+              echo "container healthy and reaching Postgres"
+              docker rm -f pepys-api-ci >/dev/null
+              exit 0
+            fi
+            sleep 2
+          done
+          echo "container did not become healthy" >&2
+          docker logs pepys-api-ci >&2
+          exit 1
       - name: Audit for known vulnerabilities
         run: npm audit --audit-level=high

@@ -104,6 +104,23 @@ and committing the generated migration alongside. The database is a derived arti
 rebuilt from its migrations, never hand-edited. A fix belongs upstream in the schema or the
 ingestion pipeline, then re-applied, so every environment converges on the same state.
 
+## The API
+
+Fastify, with one Zod schema per route driving validation, the OpenAPI document and
+the response types together rather than three descriptions of the same shape.
+
+```bash
+npm run dev     # rebuild and restart on change
+npm start       # run the built server
+```
+
+`src/api/server.ts` exports `buildServer()`, which builds the app without listening so
+tests drive it through `app.inject()` instead of binding a port; `src/api/index.ts` is
+the entry point that listens and handles shutdown. `/docs` serves the API documentation.
+
+`/health` checks the database rather than reporting a hollow "ok" — the service is only
+useful when it can reach Postgres, so its health should say so.
+
 ## Security
 
 - Pin GitHub Actions to a full commit SHA, never a mutable tag; note the version in a

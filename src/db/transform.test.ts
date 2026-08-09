@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { normalizeSource, toDate } from "./transform.js";
+import { fromDate, normalizeSource, toDate } from "./transform.js";
 
 describe("normalizeSource", () => {
   it("collapses both spellings of Mynors Bright onto one value", () => {
@@ -24,5 +24,12 @@ describe("toDate", () => {
     // land on 1659-12-31 once stored.
     expect(toDate("1660-01-01").toISOString()).toBe("1660-01-01T00:00:00.000Z");
     expect(toDate("1669-05-31").toISOString()).toBe("1669-05-31T00:00:00.000Z");
+  });
+});
+
+describe("fromDate", () => {
+  it("is the inverse of toDate", () => {
+    expect(fromDate(toDate("1660-01-01"))).toBe("1660-01-01");
+    expect(fromDate(toDate("1669-05-31"))).toBe("1669-05-31");
   });
 });

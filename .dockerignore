@@ -1,0 +1,15 @@
+# Rebuilt inside the image
+node_modules
+dist
+
+# Ingestion inputs and output — the running API reads from Postgres, not these.
+# Skipping them keeps ~14 MB of diary text out of the image.
+data
+
+# Not ours to ship
+.git
+.github
+.env
+.env.*
+*.log
+.DS_Store

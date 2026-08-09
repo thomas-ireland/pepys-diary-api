@@ -9,6 +9,7 @@ import {
 } from "fastify-type-provider-zod";
 import { z } from "zod";
 import { prisma } from "../db/client.js";
+import { daysRoutes } from "./routes/days.js";
 
 export interface BuildServerOptions {
   /** Pass false in tests to keep request logs out of the output. */
@@ -47,6 +48,8 @@ export async function buildServer(
   });
 
   await app.register(swaggerUi, { routePrefix: "/docs" });
+
+  await app.register(daysRoutes);
 
   app.withTypeProvider<ZodTypeProvider>().route({
     method: "GET",

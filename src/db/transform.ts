@@ -18,3 +18,8 @@ export function normalizeSource(source: string | null): string | null {
 export function toDate(iso: string): Date {
   return new Date(`${iso}T00:00:00Z`);
 }
+
+/** Inverse of {@link toDate}. */
+export function fromDate(date: Date): string {
+  return date.toISOString().slice(0, 10);
+}

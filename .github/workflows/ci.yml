@@ -54,8 +54,14 @@ jobs:
         run: npm run db:validate
       - name: Apply migrations
         run: npm run db:deploy
+      - name: Seed the database
+        run: npm run db:seed
       - name: Test
         run: npm run test
+      # Seeds again on top of the row above, so this also proves a reseed over
+      # existing data lands identically.
+      - name: Test against the database
+        run: npm run test:db
       - name: Build
         run: npm run build
       - name: Audit for known vulnerabilities

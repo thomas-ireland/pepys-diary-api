@@ -58,8 +58,11 @@ npm run build
 `npm ci` is first and installs strictly from `package-lock.json` (needs the exact Node
 version pinned in `.node-version`; `engine-strict` in `.npmrc` refuses any other version).
 `db:validate` needs `DATABASE_URL` to be set — see [Database](#database). CI runs the same,
-plus `npm audit signatures`, `npm audit --audit-level=high`, and `npm run db:deploy` against
-a throwaway Postgres service to prove the migrations apply from scratch.
+plus `npm audit signatures`, `npm audit --audit-level=high`, and — against a throwaway
+Postgres service — `npm run db:deploy`, `npm run db:seed` and `npm run test:db`, proving the
+migrations apply from scratch and the seed fills them correctly. Those aren't in the local
+gate because they need a running database and rewrite its contents; run `npm run test:db`
+yourself when changing anything that touches it.
 
 To add, update, or remove a dependency: `npm install [--save-dev] <package>@<exact-version>`
 (`save-exact` in `.npmrc` pins it precisely), in the same commit that needs it, then run
@@ -86,8 +89,15 @@ Then:
 ```bash
 npm run db:up        # start Postgres
 npm run db:migrate   # apply migrations (and generate one, if the schema changed)
+npm run db:seed      # load data/diary.json into it
 npm run db:down      # stop it
 ```
+
+The Prisma client is generated into `node_modules`, which `npm ci` wipes — so on a fresh
+clone run `npm run db:validate` (or the whole gate, which does it early) before `npm run
+build` or `npm run test`, or they'll fail on a missing `@prisma/client`. If an editor still
+reports that after generating, its TypeScript server is holding a stale copy and needs
+restarting.
 
 The schema lives in `prisma/schema.prisma`; a change to it means running `npm run db:migrate`
 and committing the generated migration alongside. The database is a derived artifact —

@@ -14,13 +14,15 @@
     "lint": "eslint .",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
-    "test": "vitest run",
+    "test": "vitest run --project unit",
+    "test:db": "vitest run --project integration",
     "build:data": "npm run build && node dist/ingest/build.js",
     "db:up": "docker compose up -d",
     "db:down": "docker compose down",
     "db:migrate": "prisma migrate dev",
     "db:deploy": "prisma migrate deploy",
     "db:validate": "prisma validate && prisma generate",
+    "db:seed": "npm run build && node --env-file-if-exists=.env dist/db/seed.cli.js",
     "gate": "npm ci && npm run lint && npm run format:check && npm run db:validate && npm run test && npm run build",
     "prepare": "husky"
   },
@@ -40,6 +42,7 @@
     "vitest": "4.1.10"
   },
   "dependencies": {
+    "@prisma/adapter-pg": "7.9.1",
     "@prisma/client": "7.9.1"
   }
 }

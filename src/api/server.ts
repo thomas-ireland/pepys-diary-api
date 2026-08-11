@@ -10,6 +10,7 @@ import {
 import { z } from "zod";
 import { prisma } from "../db/client.js";
 import { daysRoutes } from "./routes/days.js";
+import { searchRoutes } from "./routes/search.js";
 
 export interface BuildServerOptions {
   /** Pass false in tests to keep request logs out of the output. */
@@ -50,6 +51,7 @@ export async function buildServer(
   await app.register(swaggerUi, { routePrefix: "/docs" });
 
   await app.register(daysRoutes);
+  await app.register(searchRoutes);
 
   app.withTypeProvider<ZodTypeProvider>().route({
     method: "GET",

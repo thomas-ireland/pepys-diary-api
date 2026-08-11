@@ -5,7 +5,7 @@ import { prisma } from "../../db/client.js";
 import { fromDate, toDate } from "../../db/transform.js";
 import { isValidYmd, parseIsoDate } from "../../ingest/calendar.js";
 
-const isoDate = z
+export const isoDate = z
   .string()
   .regex(/^\d{4}-\d{2}-\d{2}$/, "must be YYYY-MM-DD")
   .refine((value) => isValidYmd(...parseIsoDate(value)), {

@@ -40,6 +40,14 @@ model Entry {
   days       Day[]
   commentary Commentary[]
 
+  /// Generated from `text` by the database (see the migration) and GIN-indexed.
+  /// NOT NULL at the database level -- it's marked optional here only because
+  /// Prisma disables create/update on a model entirely if a required
+  /// Unsupported field exists, since it has no way to populate one. Prisma
+  /// can't select or filter an Unsupported type either way, so /search
+  /// reaches it via $queryRaw rather than the query builder.
+  searchVector Unsupported("tsvector")?
+
   @@map("entries")
 }
 

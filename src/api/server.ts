@@ -1,4 +1,5 @@
 import helmet from "@fastify/helmet";
+import rateLimit from "@fastify/rate-limit";
 import swagger from "@fastify/swagger";
 import swaggerUi from "@fastify/swagger-ui";
 import Fastify, { type FastifyInstance } from "fastify";
@@ -38,6 +39,14 @@ export async function buildServer(
   app.setSerializerCompiler(serializerCompiler);
 
   await app.register(helmet);
+
+  // No auth on this API, so this is the main defence against abuse. /search
+  // gets a stricter override (see routes/search.ts) since ts_rank/ts_headline
+  // is real per-request DB work, unlike the indexed lookups on /days.
+  await app.register(rateLimit, {
+    max: 100,
+    timeWindow: "1 minute",
+  });
 
   await app.register(swagger, {
     openapi: {

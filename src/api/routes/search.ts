@@ -34,6 +34,9 @@ export const searchRoutes: FastifyPluginAsyncZod = async (app) => {
   app.get(
     "/search",
     {
+      // Stricter than the global default (server.ts) -- ts_rank/ts_headline
+      // is real per-request DB work, unlike the indexed lookups on /days.
+      config: { rateLimit: { max: 20, timeWindow: "1 minute" } },
       schema: {
         summary: "Full-text search over entry text",
         tags: ["search"],

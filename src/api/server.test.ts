@@ -34,4 +34,16 @@ describe("server", () => {
     const response = await app.inject({ method: "GET", url: "/docs/" });
     expect(response.statusCode).toBe(200);
   });
+
+  it("sets baseline security headers on every response", async () => {
+    const response = await app.inject({ method: "GET", url: "/health" });
+    expect(response.headers["x-content-type-options"]).toBe("nosniff");
+    expect(response.headers["x-frame-options"]).toBe("SAMEORIGIN");
+    expect(response.headers["content-security-policy"]).toBe(
+      "default-src 'self';base-uri 'self';font-src 'self' https: data:;" +
+        "form-action 'self';frame-ancestors 'self';img-src 'self' data:;" +
+        "object-src 'none';script-src 'self';script-src-attr 'none';" +
+        "style-src 'self' https: 'unsafe-inline';upgrade-insecure-requests",
+    );
+  });
 });

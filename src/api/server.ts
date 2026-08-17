@@ -1,3 +1,4 @@
+import helmet from "@fastify/helmet";
 import swagger from "@fastify/swagger";
 import swaggerUi from "@fastify/swagger-ui";
 import Fastify, { type FastifyInstance } from "fastify";
@@ -35,6 +36,8 @@ export async function buildServer(
   // response types -- rather than three descriptions of the same shape.
   app.setValidatorCompiler(validatorCompiler);
   app.setSerializerCompiler(serializerCompiler);
+
+  await app.register(helmet);
 
   await app.register(swagger, {
     openapi: {

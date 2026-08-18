@@ -136,6 +136,34 @@ never uses to serve a request — its own CLI, TypeScript, and Prisma Studio's R
 around 270 MB between them. CI builds the image and queries through it, so a future Prisma
 release that genuinely needs one of those fails there rather than in production.
 
+### Deployment
+
+`docker-compose.prod.yml` runs the app and Postgres together on a single host — app and
+database, nothing else. Distinct from `docker-compose.yml` (Postgres only, for local dev):
+same host, same default project name, so its volume is deliberately named differently
+(`pepys-pgdata-prod`) to avoid silently attaching to dev's data.
+
+Once, on the server:
+
+```bash
+git clone <repo> && cd pepys-diary-api
+cp .env.prod.example .env   # fill in a real POSTGRES_PASSWORD
+docker compose -f docker-compose.prod.yml up -d --build
+```
+
+Postgres is published to `127.0.0.1:5432` only — reachable for migrations and seeding via
+an SSH tunnel, never from the public internet. The runtime image has no Prisma CLI (see
+"The container"), so run those from a clone of this repo instead, tunneled to the server:
+
+```bash
+ssh -L 5432:localhost:5432 <user>@<host>   # in one terminal, left running
+DATABASE_URL="postgresql://pepys:<password>@localhost:5432/pepys?schema=public" npm run db:deploy
+DATABASE_URL="postgresql://pepys:<password>@localhost:5432/pepys?schema=public" npm run db:seed
+```
+
+The app listens on port 80 inside the compose network; TLS is terminated at the edge (e.g.
+Cloudflare in front of the server) rather than by the app or a reverse proxy on the box.
+
 ## Security
 
 - Pin GitHub Actions to a full commit SHA, never a mutable tag; note the version in a

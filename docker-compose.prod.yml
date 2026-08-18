@@ -1,0 +1,39 @@
+services:
+  postgres:
+    image: postgres:18.4-alpine
+    container_name: pepys-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: pepys
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: pepys
+    ports:
+      # Loopback only -- never the public interface. Reachable for admin
+      # work (migrations, seeding) via an SSH tunnel, nothing else.
+      - "127.0.0.1:5432:5432"
+    volumes:
+      # Distinct name from docker-compose.yml's pepys-pgdata -- both resolve
+      # under the same default (directory-name) project, so a shared name
+      # would silently attach this to dev's data volume instead of a fresh
+      # one.
+      - pepys-pgdata-prod:/var/lib/postgresql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U pepys -d pepys"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  app:
+    build: .
+    container_name: pepys-api
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      DATABASE_URL: postgresql://pepys:${POSTGRES_PASSWORD}@postgres:5432/pepys?schema=public
+    ports:
+      - "80:3000"
+
+volumes:
+  pepys-pgdata-prod:

@@ -12,6 +12,7 @@ npm-debug.log*
 .env
 .env.*
 !.env.example
+!.env.prod.example
 
 # macOS
 .DS_Store

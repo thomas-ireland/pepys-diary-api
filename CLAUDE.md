@@ -170,6 +170,11 @@ Cloudflare in front of the server) rather than by the app or a reverse proxy on 
   trailing comment so Dependabot can bump it. Verify the SHA two independent ways and
   confirm they agree: `gh api repos/<owner>/<repo>/git/ref/tags/<tag>` and
   `git ls-remote https://github.com/<owner>/<repo> refs/tags/<tag>`.
+- Pin Docker base images (`Dockerfile`, both compose files) to a digest alongside the tag
+  (`image:tag@sha256:...`) — same reasoning as Actions: a tag isn't immutable, a digest is.
+  Verify two independent ways and confirm they agree: `docker buildx imagetools inspect
+<image>:<tag>` and a direct registry query (`curl` the v2 manifest endpoint with a
+  registry auth token, read the `Docker-Content-Digest` response header).
 - Least-privilege workflow tokens (`permissions: contents: read`); `checkout` uses
   `persist-credentials: false`.
 - Dependencies pinned exactly (`save-exact`), kept current by Dependabot.

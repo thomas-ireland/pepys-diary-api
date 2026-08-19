@@ -85,5 +85,34 @@ jobs:
           echo "container did not become healthy" >&2
           docker logs pepys-api-ci >&2
           exit 1
+      # Production runs this image with TLS_CERT_PATH/TLS_KEY_PATH set (see
+      # CLAUDE.md's Deployment section); this is the only place that path,
+      # including the healthcheck script's cert-trust bypass, gets exercised
+      # for real rather than just at the unit-test level.
+      - name: Generate a throwaway TLS cert for the HTTPS smoke test
+        run: |
+          mkdir -p /tmp/certs
+          openssl req -x509 -newkey rsa:2048 -nodes \
+            -keyout /tmp/certs/key.pem -out /tmp/certs/cert.pem \
+            -days 1 -subj "/CN=localhost"
+      - name: Smoke test the container image over HTTPS
+        run: |
+          docker run -d --name pepys-api-ci-https --network host \
+            -v /tmp/certs:/app/certs:ro \
+            -e DATABASE_URL="$DATABASE_URL" \
+            -e TLS_CERT_PATH=/app/certs/cert.pem \
+            -e TLS_KEY_PATH=/app/certs/key.pem \
+            pepys-api:ci
+          for i in $(seq 1 30); do
+            if curl -fsSk https://localhost:3000/health | grep -q '"status":"ok"'; then
+              echo "container healthy over HTTPS and reaching Postgres"
+              docker rm -f pepys-api-ci-https >/dev/null
+              exit 0
+            fi
+            sleep 2
+          done
+          echo "container did not become healthy over HTTPS" >&2
+          docker logs pepys-api-ci-https >&2
+          exit 1
       - name: Audit for known vulnerabilities
         run: npm audit --audit-level=high

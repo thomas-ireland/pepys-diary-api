@@ -1,3 +1,4 @@
+import { readFileSync } from "node:fs";
 import helmet from "@fastify/helmet";
 import rateLimit from "@fastify/rate-limit";
 import swagger from "@fastify/swagger";
@@ -26,12 +27,36 @@ export interface BuildServerOptions {
 export async function buildServer(
   options: BuildServerOptions = {},
 ): Promise<FastifyInstance> {
-  const app = Fastify({
-    logger:
-      options.logger === false
-        ? false
-        : { level: process.env.LOG_LEVEL ?? "info" },
-  }).withTypeProvider<ZodTypeProvider>();
+  // Plain HTTP unless both are set -- true for local dev, tests, and the
+  // CI container smoke test. In production, Cloudflare terminates HTTPS for
+  // visitors but (in Full/Full-strict mode) still needs a real cert on this
+  // end for the Cloudflare-to-origin leg -- see CLAUDE.md's Deployment
+  // section.
+  const tlsCertPath = process.env.TLS_CERT_PATH;
+  const tlsKeyPath = process.env.TLS_KEY_PATH;
+  const logger =
+    options.logger === false
+      ? false
+      : { level: process.env.LOG_LEVEL ?? "info" };
+
+  // Two literal calls rather than one with a conditionally-undefined `https`
+  // field: Fastify's overloads key off the literal presence of `https` to
+  // pick the return type, and a variably-typed field breaks that inference.
+  // Assigned into a pre-typed `let` rather than a ternary, which would
+  // otherwise infer a union of both branches' precise types and break every
+  // later app.register() call.
+  let app: FastifyInstance;
+  if (tlsCertPath && tlsKeyPath) {
+    app = Fastify({
+      logger,
+      https: {
+        cert: readFileSync(tlsCertPath),
+        key: readFileSync(tlsKeyPath),
+      },
+    }).withTypeProvider<ZodTypeProvider>();
+  } else {
+    app = Fastify({ logger }).withTypeProvider<ZodTypeProvider>();
+  }
 
   // One Zod schema per route drives validation, the OpenAPI document, and the
   // response types -- rather than three descriptions of the same shape.

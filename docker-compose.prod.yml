@@ -33,8 +33,18 @@ services:
         condition: service_healthy
     environment:
       DATABASE_URL: postgresql://pepys:${POSTGRES_PASSWORD}@postgres:5432/pepys?schema=public
+      TLS_CERT_PATH: /app/certs/origin-cert.pem
+      TLS_KEY_PATH: /app/certs/origin-key.pem
+    volumes:
+      # Cloudflare Origin CA cert -- see CLAUDE.md's Deployment section for
+      # how these get onto the server. Read-only: the app only ever reads
+      # them.
+      - ./certs:/app/certs:ro
     ports:
-      - "80:3000"
+      # 443, not 80 -- Cloudflare's Full (strict) mode speaks HTTPS to the
+      # origin, so nothing needs to reach this container over plain HTTP
+      # anymore.
+      - "443:3000"
 
 volumes:
   pepys-pgdata-prod:

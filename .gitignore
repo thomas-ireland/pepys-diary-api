@@ -14,5 +14,9 @@ npm-debug.log*
 !.env.example
 !.env.prod.example
 
+# TLS certificate/key for production, placed directly on the server -- see
+# CLAUDE.md's Deployment section
+certs/
+
 # macOS
 .DS_Store

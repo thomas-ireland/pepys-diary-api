@@ -161,8 +161,30 @@ DATABASE_URL="postgresql://pepys:<password>@localhost:5432/pepys?schema=public" 
 DATABASE_URL="postgresql://pepys:<password>@localhost:5432/pepys?schema=public" npm run db:seed
 ```
 
-The app listens on port 80 inside the compose network; TLS is terminated at the edge (e.g.
-Cloudflare in front of the server) rather than by the app or a reverse proxy on the box.
+The app terminates TLS itself, via `TLS_CERT_PATH`/`TLS_KEY_PATH` (see `server.ts`) — set
+both and it listens over HTTPS, set neither and it's plain HTTP (the default, used by local
+dev, tests, and the CI container smoke test). In production this pairs with Cloudflare set
+to **Full (strict)**, not Flexible: Flexible only encrypts the visitor-to-Cloudflare leg,
+leaving Cloudflare-to-origin as plain HTTP.
+
+The certificate is a Cloudflare **Origin CA** certificate (dashboard → SSL/TLS → Origin
+Server → Create Certificate; 15-year validity avoids renewal automation entirely). Its
+private key should never leave the server — generate it there or paste it directly into a
+file over SSH, never through a local clone or any chat/AI tool. Once on the server:
+
+```bash
+mkdir -p certs
+# paste the certificate and key from the Cloudflare dashboard into these directly
+nano certs/origin-cert.pem
+nano certs/origin-key.pem
+chmod 600 certs/origin-key.pem
+```
+
+`docker-compose.prod.yml` mounts `certs/` read-only into the app container and maps port 443. Cloudflare Origin CA certs aren't in Node's default trust store, which is why the
+Docker `HEALTHCHECK` uses a dedicated script (`src/api/healthcheck.ts`) rather than a plain
+`fetch` — it explicitly skips certificate trust for that one loopback check, which is safe
+precisely because it's loopback: not a real client, and doesn't affect what Cloudflare or
+visitors actually validate.
 
 ## Security
 

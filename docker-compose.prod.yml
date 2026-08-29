@@ -33,8 +33,31 @@ services:
         condition: service_healthy
     environment:
       DATABASE_URL: postgresql://pepys:${POSTGRES_PASSWORD}@postgres:5432/pepys?schema=public
+    # No `ports:` -- not reachable except via Caddy, over the internal
+    # compose network as `app:3000`. Runs as the image's default USER node;
+    # it never touches the TLS certificate, so it needs no elevated access
+    # to anything on the host.
+
+  caddy:
+    image: caddy:2.10-alpine@sha256:4c6e91c6ed0e2fa03efd5b44747b625fec79bc9cd06ac5235a779726618e530d
+    container_name: pepys-caddy
+    restart: unless-stopped
+    depends_on:
+      app:
+        condition: service_healthy
+    # Runs as a dedicated, unprivileged system account (never your own admin
+    # user) -- see CLAUDE.md's Deployment section for why and how to create
+    # it. Caddy is the one thing here directly exposed to the internet, so
+    # it's the last place to run as anything with real privileges on the
+    # host.
+    user: "${CADDY_UID}:${CADDY_GID}"
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - ./certs:/etc/caddy/certs:ro
     ports:
-      - "80:3000"
+      # 443 only -- Cloudflare's Full (strict) mode always speaks HTTPS to
+      # the origin, so there's nothing for port 80 to do here.
+      - "443:443"
 
 volumes:
   pepys-pgdata-prod:

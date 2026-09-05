@@ -4,7 +4,18 @@
 }
 
 api.pepys.dev {
-	tls /etc/caddy/certs/origin-cert.pem /etc/caddy/certs/origin-key.pem
+	tls /etc/caddy/certs/origin-cert.pem /etc/caddy/certs/origin-key.pem {
+		# Authenticated Origin Pulls: only accept connections presenting a
+		# client certificate signed by Cloudflare's own CA, so a request
+		# reaching this far is provably from Cloudflare's network, not just
+		# from an IP that happened to get past the firewall.
+		client_auth {
+			mode require_and_verify
+			trust_pool file {
+				pem_file /etc/caddy/cloudflare-origin-pull-ca.pem
+			}
+		}
+	}
 
 	reverse_proxy app:3000
 }

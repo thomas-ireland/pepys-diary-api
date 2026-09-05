@@ -100,6 +100,7 @@ jobs:
           docker run --rm \
             -v "$PWD/Caddyfile:/etc/caddy/Caddyfile:ro" \
             -v /tmp/caddy-validate-certs:/etc/caddy/certs:ro \
+            -v "$PWD/cloudflare-origin-pull-ca.pem:/etc/caddy/cloudflare-origin-pull-ca.pem:ro" \
             caddy:2.10-alpine caddy validate --config /etc/caddy/Caddyfile
       - name: Audit for known vulnerabilities
         run: npm audit --audit-level=high

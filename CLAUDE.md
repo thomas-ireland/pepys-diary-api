@@ -200,6 +200,18 @@ store, since they're only ever meant to be validated by Cloudflare itself — ex
 certificate warnings from anything that isn't Cloudflare trying to connect directly (which,
 per the firewall rule above, nothing but Cloudflare should be able to do anyway).
 
+**Authenticated Origin Pulls.** The Caddyfile also requires every connection to present a
+client certificate signed by Cloudflare's own CA (`client_auth` with `mode
+require_and_verify`), so a request reaching Caddy is provably from Cloudflare's network,
+independent of the firewall rule — a second, independent lock rather than relying on the IP
+allowlist alone. `cloudflare-origin-pull-ca.pem` is that CA's certificate, fetched from
+`developers.cloudflare.com/ssl/static/authenticated_origin_pull_ca.pem` — public by design
+(Cloudflare publishes it for exactly this purpose), so it's committed to the repo rather
+than placed on the server like the origin cert/key. Enable the matching toggle in the
+Cloudflare dashboard (SSL/TLS → Origin Server → Authenticated Origin Pulls) — without it,
+Cloudflare won't present a client certificate and every real request will be rejected
+alongside the illegitimate ones.
+
 ## Security
 
 - Pin GitHub Actions to a full commit SHA, never a mutable tag; note the version in a

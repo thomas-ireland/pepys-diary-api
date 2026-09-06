@@ -10,7 +10,8 @@
     "node": "24.18.0"
   },
   "overrides": {
-    "deepmerge-ts": "8.0.1"
+    "deepmerge-ts": "8.0.1",
+    "mysql2": "3.24.3"
   },
   "scripts": {
     "build": "tsc",
@@ -32,18 +33,18 @@
     "prepare": "husky"
   },
   "devDependencies": {
-    "@commitlint/cli": "21.2.1",
-    "@commitlint/config-conventional": "21.2.0",
+    "@commitlint/cli": "21.2.2",
+    "@commitlint/config-conventional": "21.2.2",
     "@eslint/js": "10.0.1",
     "@types/node": "24.13.3",
-    "eslint": "10.8.1",
+    "eslint": "10.9.1",
     "eslint-config-prettier": "10.1.8",
     "husky": "9.1.7",
     "lint-staged": "17.3.0",
     "prettier": "3.9.6",
     "prisma": "7.9.1",
     "typescript": "5.9.3",
-    "typescript-eslint": "8.67.0",
+    "typescript-eslint": "8.69.0",
     "vitest": "4.1.10"
   },
   "dependencies": {
@@ -53,7 +54,7 @@
     "@fastify/swagger-ui": "6.1.1",
     "@prisma/adapter-pg": "7.9.1",
     "@prisma/client": "7.9.1",
-    "fastify": "5.11.3",
+    "fastify": "5.12.3",
     "fastify-type-provider-zod": "7.0.0",
     "zod": "4.4.3"
   }

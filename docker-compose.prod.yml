@@ -54,6 +54,9 @@ services:
     volumes:
       - ./Caddyfile:/etc/caddy/Caddyfile:ro
       - ./certs:/etc/caddy/certs:ro
+      # Public (Cloudflare publishes this for anyone to use), so committed
+      # to the repo directly rather than placed on the server like certs/.
+      - ./cloudflare-origin-pull-ca.pem:/etc/caddy/cloudflare-origin-pull-ca.pem:ro
     ports:
       # 443 only -- Cloudflare's Full (strict) mode always speaks HTTPS to
       # the origin, so there's nothing for port 80 to do here.

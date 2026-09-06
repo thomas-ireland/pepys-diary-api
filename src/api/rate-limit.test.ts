@@ -31,4 +31,26 @@ describe("rate limiting", () => {
     expect(last!.json().message).toMatch(/rate limit exceeded/i);
     expect(last!.headers["retry-after"]).toBeDefined();
   });
+
+  it("gives distinct Cloudflare visitors independent buckets, not one shared one", async () => {
+    // Without keyGenerator reading CF-Connecting-IP, every request's req.ip
+    // is Caddy's own address in production -- every real visitor would share
+    // this one bucket, and one visitor exhausting it would 429 everyone else.
+    let last;
+    for (let i = 0; i < 21; i++) {
+      last = await app.inject({
+        method: "GET",
+        url: "/search",
+        headers: { "cf-connecting-ip": "203.0.113.1" },
+      });
+    }
+    expect(last!.statusCode).toBe(429);
+
+    const otherVisitor = await app.inject({
+      method: "GET",
+      url: "/search",
+      headers: { "cf-connecting-ip": "203.0.113.2" },
+    });
+    expect(otherVisitor.statusCode).not.toBe(429);
+  });
 });

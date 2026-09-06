@@ -2,7 +2,7 @@ import helmet from "@fastify/helmet";
 import rateLimit from "@fastify/rate-limit";
 import swagger from "@fastify/swagger";
 import swaggerUi from "@fastify/swagger-ui";
-import Fastify, { type FastifyInstance } from "fastify";
+import Fastify, { type FastifyError, type FastifyInstance } from "fastify";
 import {
   jsonSchemaTransform,
   serializerCompiler,
@@ -38,6 +38,35 @@ export async function buildServer(
   // response types -- rather than three descriptions of the same shape.
   app.setValidatorCompiler(validatorCompiler);
   app.setSerializerCompiler(serializerCompiler);
+
+  // Fastify's default behaviour for an unhandled throw -- e.g. a Prisma
+  // query failing because the database is down -- serializes the real
+  // error's own message into the response. /days and /search never catch
+  // their own DB calls, so without this, the same class of leak /health
+  // guards against would reach callers on every other route instead.
+  // Genuine client-input problems (validation, 404s) already carry their
+  // own safe, useful message and their own <500 status, so those pass
+  // through unchanged; only >=500s are undisclosed.
+  //
+  // Must be set before registering any routes: Fastify's plugin
+  // encapsulation snapshots the parent's error handler at registration
+  // time, so a route plugin registered before this line wouldn't inherit
+  // it -- confirmed the hard way, this exact bug shipped once already.
+  app.setErrorHandler<FastifyError>((error, request, reply) => {
+    const statusCode = error.statusCode ?? 500;
+    if (statusCode < 500) {
+      reply.code(statusCode);
+      reply.send(error);
+      return;
+    }
+    request.log.error(error, "unhandled error");
+    reply.code(500);
+    reply.send({
+      statusCode: 500,
+      error: "Internal Server Error",
+      message: "internal server error",
+    });
+  });
 
   await app.register(helmet);
 

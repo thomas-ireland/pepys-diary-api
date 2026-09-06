@@ -1,11 +1,20 @@
-import { afterAll, beforeAll, describe, expect, it } from "vitest";
+import {
+  afterAll,
+  afterEach,
+  beforeAll,
+  describe,
+  expect,
+  it,
+  vi,
+} from "vitest";
 import type { FastifyInstance } from "fastify";
+import { prisma } from "../db/client.js";
 import { buildServer } from "./server.js";
 
 /**
- * Driven through app.inject(), so nothing here binds a port or needs a
- * database — the health check's database behaviour is covered in
- * server.integration.test.ts.
+ * Driven through app.inject(), so nothing here binds a port or needs a real
+ * database — the happy path is covered in server.integration.test.ts; the
+ * failure path here mocks prisma directly instead.
  */
 describe("server", () => {
   let app: FastifyInstance;
@@ -17,6 +26,10 @@ describe("server", () => {
 
   afterAll(async () => {
     await app.close();
+  });
+
+  afterEach(() => {
+    vi.restoreAllMocks();
   });
 
   it("serves an OpenAPI document describing itself", () => {
@@ -45,5 +58,19 @@ describe("server", () => {
         "object-src 'none';script-src 'self';script-src-attr 'none';" +
         "style-src 'self' https: 'unsafe-inline';upgrade-insecure-requests",
     );
+  });
+
+  it("doesn't leak database internals when the health check fails", async () => {
+    vi.spyOn(prisma, "$queryRaw").mockRejectedValue(
+      new Error("Can't reach database server at `internal-db.private:5432`"),
+    );
+
+    const response = await app.inject({ method: "GET", url: "/health" });
+    expect(response.statusCode).toBe(503);
+    expect(response.json()).toEqual({
+      status: "error",
+      detail: "database unreachable",
+    });
+    expect(response.payload).not.toContain("internal-db.private");
   });
 });

@@ -1,5 +1,6 @@
 import type { FastifyPluginAsyncZod } from "fastify-type-provider-zod";
 import { z } from "zod";
+import { cloudflareIpKeyGenerator } from "../cloudflare.js";
 import { prisma } from "../../db/client.js";
 import { fromDate } from "../../db/transform.js";
 import { isoDate } from "./days.js";
@@ -36,7 +37,15 @@ export const searchRoutes: FastifyPluginAsyncZod = async (app) => {
     {
       // Stricter than the global default (server.ts) -- ts_rank/ts_headline
       // is real per-request DB work, unlike the indexed lookups on /days.
-      config: { rateLimit: { max: 20, timeWindow: "1 minute" } },
+      // Same keyGenerator as the global limit, or this override would bucket
+      // by Caddy's address while the global one buckets by real visitor.
+      config: {
+        rateLimit: {
+          max: 20,
+          timeWindow: "1 minute",
+          keyGenerator: cloudflareIpKeyGenerator,
+        },
+      },
       schema: {
         summary: "Full-text search over entry text",
         tags: ["search"],

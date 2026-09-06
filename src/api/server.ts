@@ -10,6 +10,7 @@ import {
   type ZodTypeProvider,
 } from "fastify-type-provider-zod";
 import { z } from "zod";
+import { cloudflareIpKeyGenerator } from "./cloudflare.js";
 import { prisma } from "../db/client.js";
 import { daysRoutes } from "./routes/days.js";
 import { searchRoutes } from "./routes/search.js";
@@ -46,6 +47,7 @@ export async function buildServer(
   await app.register(rateLimit, {
     max: 100,
     timeWindow: "1 minute",
+    keyGenerator: cloudflareIpKeyGenerator,
   });
 
   await app.register(swagger, {

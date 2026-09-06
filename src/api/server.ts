@@ -78,19 +78,19 @@ export async function buildServer(
         503: z.object({ status: z.literal("error"), detail: z.string() }),
       },
     },
-    handler: async (_request, reply) => {
+    handler: async (request, reply) => {
       // This service is only useful when it can reach the database, so the
-      // health check says so rather than reporting a hollow "ok".
+      // health check says so rather than reporting a hollow "ok". The real
+      // error (which can name internal hosts/credentials) goes to the
+      // server's own log, not to whoever's asking -- this endpoint has no
+      // auth and is reachable by anyone.
       try {
         await prisma.$queryRaw`SELECT 1`;
         return { status: "ok" as const };
       } catch (error) {
+        request.log.error(error, "health check failed to reach the database");
         reply.code(503);
-        return {
-          status: "error" as const,
-          detail:
-            error instanceof Error ? error.message : "database unreachable",
-        };
+        return { status: "error" as const, detail: "database unreachable" };
       }
     },
   });

@@ -138,16 +138,28 @@ release that genuinely needs one of those fails there rather than in production.
 
 ### Deployment
 
-`docker-compose.prod.yml` runs the app and Postgres together on a single host — app and
-database, nothing else. Distinct from `docker-compose.yml` (Postgres only, for local dev):
-same host, same default project name, so its volume is deliberately named differently
+`docker-compose.prod.yml` runs three services on a single host: Postgres, the app, and
+Caddy in front of it as a reverse proxy. Only Caddy is reachable from outside the host —
+the app has no published port at all, reachable solely via the compose network as
+`app:3000`. Distinct from `docker-compose.yml` (Postgres only, for local dev): same host,
+same default project name, so its volume is deliberately named differently
 (`pepys-pgdata-prod`) to avoid silently attaching to dev's data.
 
-Once, on the server:
+The app has no host permissions and never touches the certificate — Caddy holds it instead,
+running as its own dedicated account rather than the app or the deploying user.
+**Before the first deploy**, create that account:
+
+```bash
+sudo useradd --system --no-create-home --shell /usr/sbin/nologin pepys-app
+id -u pepys-app   # paste into .env as CADDY_UID
+id -g pepys-app   # paste into .env as CADDY_GID
+```
+
+Then, once, on the server:
 
 ```bash
 git clone <repo> && cd pepys-diary-api
-cp .env.prod.example .env   # fill in a real POSTGRES_PASSWORD
+cp .env.prod.example .env   # fill in CADDY_UID, CADDY_GID, and a real POSTGRES_PASSWORD
 docker compose -f docker-compose.prod.yml up -d --build
 ```
 
@@ -161,8 +173,32 @@ DATABASE_URL="postgresql://pepys:<password>@localhost:5432/pepys?schema=public" 
 DATABASE_URL="postgresql://pepys:<password>@localhost:5432/pepys?schema=public" npm run db:seed
 ```
 
-The app listens on port 80 inside the compose network; TLS is terminated at the edge (e.g.
-Cloudflare in front of the server) rather than by the app or a reverse proxy on the box.
+**TLS.** Cloudflare sits in front of this server, set to **Full (strict)** — not Flexible,
+which only encrypts the visitor-to-Cloudflare leg and leaves Cloudflare-to-origin as plain
+HTTP. Full (strict) means Cloudflare validates a real certificate on this end, so the whole
+path is genuinely encrypted, not just the half a browser can see. This only means anything
+because the origin is also locked down at the network level: the server's firewall allows
+port 443 only from Cloudflare's published IP ranges (`cloudflare.com/ips-v4`/`ips-v6`), so
+the certificate can't simply be bypassed by hitting the server's IP directly.
+
+The certificate itself is a Cloudflare **Origin CA** certificate (dashboard → SSL/TLS →
+Origin Server → Create Certificate; 15-year validity avoids renewal automation entirely).
+Its private key should never leave the server — generate it there or paste it directly into
+a file over SSH, never through a local clone or any chat/AI tool:
+
+```bash
+mkdir -p certs
+# paste the certificate and key from the Cloudflare dashboard into these directly
+nano certs/origin-cert.pem
+nano certs/origin-key.pem
+chmod 600 certs/origin-key.pem
+```
+
+`docker-compose.prod.yml` mounts `certs/` and the repo's `Caddyfile` read-only into the
+Caddy container. Cloudflare Origin CA certificates aren't in most tools' default trust
+store, since they're only ever meant to be validated by Cloudflare itself — expect
+certificate warnings from anything that isn't Cloudflare trying to connect directly (which,
+per the firewall rule above, nothing but Cloudflare should be able to do anyway).
 
 ## Security
 

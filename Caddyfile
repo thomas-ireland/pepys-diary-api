@@ -1,0 +1,10 @@
+{
+	# No reason to expose Caddy's admin API in a single-site deployment.
+	admin off
+}
+
+api.pepys.dev {
+	tls /etc/caddy/certs/origin-cert.pem /etc/caddy/certs/origin-key.pem
+
+	reverse_proxy app:3000
+}

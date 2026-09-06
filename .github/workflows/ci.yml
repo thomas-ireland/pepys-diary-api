@@ -85,5 +85,21 @@ jobs:
           echo "container did not become healthy" >&2
           docker logs pepys-api-ci >&2
           exit 1
+      # Production runs this in front of the app as a reverse proxy (see
+      # CLAUDE.md's Deployment section). `caddy validate` also loads
+      # whatever cert the Caddyfile references, so this needs a real (if
+      # throwaway) cert present to validate cleanly -- not just a syntax
+      # check.
+      - name: Validate the Caddyfile
+        run: |
+          mkdir -p /tmp/caddy-validate-certs
+          openssl req -x509 -newkey rsa:2048 -nodes \
+            -keyout /tmp/caddy-validate-certs/origin-key.pem \
+            -out /tmp/caddy-validate-certs/origin-cert.pem \
+            -days 1 -subj "/CN=api.pepys.dev"
+          docker run --rm \
+            -v "$PWD/Caddyfile:/etc/caddy/Caddyfile:ro" \
+            -v /tmp/caddy-validate-certs:/etc/caddy/certs:ro \
+            caddy:2.10-alpine caddy validate --config /etc/caddy/Caddyfile
       - name: Audit for known vulnerabilities
         run: npm audit --audit-level=high

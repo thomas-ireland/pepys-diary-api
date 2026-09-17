@@ -3,7 +3,7 @@
 # Pinned to the same version as .node-version, so the container and local
 # development don't drift. Digest pins the exact image content -- the tag
 # alone isn't immutable, same reasoning as pinning GitHub Actions to a SHA.
-FROM node:24.18.0-slim@sha256:6f7b03f7c2c8e2e784dcf9295400527b9b1270fd37b7e9a7285cf83b6951452d AS base
+FROM node:26.0.0-slim@sha256:ccd1c33b2876c07564b3fae7f6a5815aa42f71163faf07d00a9907e398d48bdc AS base
 WORKDIR /app
 # Husky only makes sense in a working copy with git hooks; skip it so `npm ci`
 # doesn't fail on its prepare script.
